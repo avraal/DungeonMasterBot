@@ -1,8 +1,9 @@
 import discord
 import random
+import math
+import src
 
-TOKEN = 'NDc0NDg0OTkxNDg1NjczNDcy.DkSX5g.gkPJCiBiIEbnrkMMlWvlGMfkZks'
-
+TOKEN = src.__TOKEN__
 client = discord.Client()
 
 
@@ -50,40 +51,95 @@ def dice_parse(dice):
     if _d[0] == '' or _d[1] == '':
         return None
 
-    else:
-        _result = 0
-        _text_info = ''
-        for x in range(int(_d[0])):
-            _tmp = int(random.uniform(1, int(_d[1])))
-            _text_info += _d[0] + 'd' + _d[1] + ' = ' + str(_tmp) + '\n'
-            _result += _tmp
+    _result = 0
+    _text_info = ''
+    for x in range(int(_d[0])):
+        _tmp = int(random.uniform(1, int(_d[1])))
+        _text_info += _d[0] + 'd' + _d[1] + ' = ' + str(_tmp) + '\n'
+        _result += _tmp
 
-        _text_info += str(_result)
-        return _text_info
+    _text_info += str(_result)
+    return _text_info
 
 
 def show_help():
     _res = show_roll_help()
-    _res += '\n```-------------------------```\n'
     _res += show_attack_help()
+    _res += show_chrs_help()
     return _res
 
 
 def show_roll_help():
-    _res = 'Используйте команду `!roll` для генерации случайных значений\n'
+    _res = '```dsconfig\n'
+    _res += 'Используйте команду !roll для генерации случайных значений\n'
     _res += 'Возможные варианты использования этой команды:\n'
-    _res += '```\n!roll 2d4\n!roll 4d8 +2\n!roll 1d10 1\n!roll 1d20 -3\n```\n'
+    _res += '!roll 2d4\n!roll 4d8 +2\n!roll 1d10 1\n!roll 1d20 -3\n'
     _res += 'Букву `d` можно заменить на букву `к`\n'
+    _res += '```\n'
     return _res
 
 
 def show_attack_help():
-    _res = 'Команда `!attack` позволит вам воспроизвести простую сцену с нанесением урона\n'
+    _res = '```dsconfig\n'
+    _res += 'Команда !attack позволит вам воспроизвести простую сцену с нанесением урона\n'
     _res += 'Формат: `!attack <инициатор> <урон> <цель> <КД цели> [<модификатор>]`\n'
     _res += 'Например:\n'
-    _res += '`!attack Трактирщик 5 Гоблин 10`\n'
-    _res += '`!attack Гоблин 9 Трактирщик 8 +2`\n'
-    _res += '`!attack Трактирщик 2d4 Таракан 4`\n'
+    _res += '!attack Трактирщик 5 Гоблин 10\n'
+    _res += '!attack Гоблин 9 Трактирщик 8 +2\n'
+    _res += '!attack Трактирщик 2d4 Таракан 4\n'
+    _res += '```\n'
+    return _res
+
+
+def show_chrs_help():
+    _res = '```dsconfig\n'
+    _res += 'Команда `!chrs` позволяет посчитать значение вашей характеристики и модификатор для неё\n'
+    _res += 'Используйте `!chrs Телосложение` для того, чтобы высчитать значение вашей характеристики\n'
+    _res += 'Или `!chrs` чтобы получить значение для анонимной характеристики\n'
+    _res += '```\n'
+    return _res
+
+
+def roll_charac():
+    _res = just_roll('4d6')
+    if _res is None:
+        return
+
+    _m = (_res - 10) / 2
+    _m = int(_m)
+    return str(_res) + ' (' + str(_m) + ')'
+
+
+def chrs_roll():
+    vals = [0] * 10
+    for x in range(4):
+        vals[x] = int(random.uniform(1, 6))
+
+    _min = min(vals)
+    vals.remove(_min)
+
+    _sum = sum(vals)
+    _m = int(math.floor((_sum - 10) / 2))
+    _r = str(_m)
+    if _m > 0:
+        _r = '+' + str(_m)
+    return str(_sum) + ' (' + _r + ')'
+
+
+def just_roll(dice):
+    _d = dice.split('d')
+    if len(_d) != 2:
+        _d = dice.split('к')
+        if len(_d) != 2:
+            return None
+
+    if _d[0] == '' or _d[1] == '':
+        return None
+
+    _res = 0
+    for x in range(int(_d[0])):
+        _res += int(random.uniform(1, int(_d[1])))
+
     return _res
 
 
@@ -134,6 +190,15 @@ async def on_message(message):
         else:
             msg = show_attack_help()
             target = message.author
+
+    if message.content.startswith('!chrs'):
+        a = message.content.split(' ')
+        if len(a) == 1:
+            msg = chrs_roll()
+        elif len(a) == 2:
+            msg = a[1] + ': ' + chrs_roll()
+        else:
+            show_chrs_help()
 
     if message.content.startswith('!roll'):
         _c = message.content.split(' ')
