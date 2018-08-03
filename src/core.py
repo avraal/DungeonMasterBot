@@ -3,8 +3,27 @@ import random
 import math
 import src
 
-TOKEN = src.__TOKEN__
+TOKEN = src.__TOKEN_BAKA_
 client = discord.Client()
+
+
+def gold(player_class):
+    if not player_class:
+        return 0
+
+    class_list = ['бард 5d4', 'варвар 2d4', 'воин 5d4', 'волшебник 4d4',
+                  'друид 2d4', 'жрец 5d4', 'колдун 4d4', 'монах 5d4',
+                  'паладин 5d4', 'плут 4d4', 'следопыт 5d4', 'чародей 3d4']
+    player_class = player_class.lower()
+    match = [s for s in class_list if player_class in s.split(' ')[0]]
+    if not match:
+        return show_gold_help()
+    _tmp = match[0].split(' ')
+    gold_count = just_roll(_tmp[1])
+    if _tmp[0] == str.lower('монах'):
+        return gold_count
+    else:
+        return gold_count * 10
 
 
 def attack(who, damage, target, target_ac, modifier=0):
@@ -15,28 +34,60 @@ def attack(who, damage, target, target_ac, modifier=0):
     if not isinstance(target, str):
         return res + ': target'
 
-    if not isinstance(int(target_ac), int):
-        return res + ': target ac'
+    if not target_ac.isdigit():
+        return res + ': КД цели'
 
-    if not isinstance(int(modifier), int):
-        return res + ': modifier'
+    if not isinstance(modifier, int):
+        return res + ': Модификатор'
 
     _d = damage.split('d')
     _dmg = 0
-    print(_d)
     if len(_d) == 2:
         for x in range(int(_d[0])):
             _res = int(random.uniform(1, int(_d[1])))
-            print(_res)
             _dmg += _res
         damage = str(_dmg)
 
-    print(damage)
-    m = random.uniform(1, 20)
-    if (m + int(modifier)) > int(target_ac):
-        res = who + ' нанёс ' + target + ' ' + damage + ' урона'
+    miss_list = ['{} усердно бросается скверными словечками в {}, но промахивается'.format(who, target),
+                 'Замахиваясь мечём {} задумался о смысле жизни. Пока думал, {} ушёл по своим делам'.format(who,
+                                                                                                            target),
+                 '{} испугался {}, и {} его пожалел'.format(target, who, who),
+                 '{} сделал выпад своим оружием, но {} в этом не заинтересован'.format(who, target),
+                 'Мощное заклинание полетело в {}... А нет, не полетело'.format(target),
+                 'Когда {} попытался атаковать {}, с неба послышался голос: \"Не бей, подумай\", и {} подумал'.format(
+                     who, target, who),
+                 '{} нанёс пацифистическую атаку в 0 урона'.format(who),
+                 '{} наносил огромное количество урона по {}, а потом проснулся'.format(who, target),
+                 'Пафосно хвастаясь своим оружием, {} подбросил его в воздух, но оно так и не вернулось. С неба '
+                 'послышалось тихое: \"Ай.\"'.format(who),
+                 'Нет',
+                 '{} кувыркался как мог'.format(target),
+                 '{} сел на пегаса и улетел'.format(target),
+                 '{} увернулся, потому что может'.format(target)]
+
+    attack_list = ['{} сначала не мог попасть по {}, а потом как смог. Аж на {} урона'.format(who, target, damage),
+                   '{} нанёс {} урона, а потом проснулся. А потом снова нанёс {} урона'.format(who, damage, damage),
+                   '{} слишком сильно уворачивался, что нанёс сам себе {} урона'.format(target, damage),
+                   '{} докувыркался на {} урона'.format(target, damage),
+                   '{} в этот раз выбрал пики. ({} урона)'.format(target, damage),
+                   'Ну, что ты {} притих... {} урона в груди'.format(target, damage),
+                   'Атакуя мизинцем по тумбочке, {} нанёс {} урона и {}'.format(who, damage, target),
+                   '{} угостил {} шаурмой. Пищёвое отравление в {} урона'.format(who, target, damage),
+                   '{} выпил зелье здоровья 2 раза. Как известно, плюс на плюс даёт минус. {} получает {} урона'.format(
+                       target, target, damage)]
+
+    m = int(random.uniform(1, 20))
+    print(m)
+
+    if (m + modifier) > int(target_ac):
+        res = attack_list[(int(random.uniform(0, len(attack_list))))]
     else:
-        res = who + ' промазал'
+        res = miss_list[int(random.uniform(0, len(miss_list)))]
+
+    if m == 20:
+        res = 'Критическое попадание по ' + target
+    elif m == 1:
+        res = 'Критический промах'
 
     return res
 
@@ -66,6 +117,7 @@ def show_help():
     _res = show_roll_help()
     _res += show_attack_help()
     _res += show_chrs_help()
+    _res += show_gold_help()
     return _res
 
 
@@ -96,6 +148,15 @@ def show_chrs_help():
     _res += 'Команда `!chrs` позволяет посчитать значение вашей характеристики и модификатор для неё\n'
     _res += 'Используйте `!chrs Телосложение` для того, чтобы высчитать значение вашей характеристики\n'
     _res += 'Или `!chrs` чтобы получить значение для анонимной характеристики\n'
+    _res += '`!chrs full` позволит вам получить полный набор характеристик\n'
+    _res += '```\n'
+    return _res
+
+
+def show_gold_help():
+    _res = '```dsconfig\n'
+    _res += 'Быстрая генерация количества золота для вашего персонажа\n'
+    _res += 'Используйте `!gold <класс>` чтобы узнать сколько у вас золота\n'
     _res += '```\n'
     return _res
 
@@ -184,29 +245,45 @@ async def on_message(message):
         a = message.content.split(' ')
         if len(a) == 5:
             msg = attack(a[1], a[2], a[3], a[4])
-            print(msg)
         elif len(a) == 6:
             msg = attack(a[1], a[2], a[3], a[4], a[5])
         else:
             msg = show_attack_help()
             target = message.author
 
+    if message.content.startswith('!gold'):
+        a = message.content.split(' ')
+        if len(a) == 2:
+            msg = gold(a[1])
+        else:
+            target = message.author
+            msg = show_gold_help()
+
     if message.content.startswith('!chrs'):
         a = message.content.split(' ')
         if len(a) == 1:
             msg = chrs_roll()
         elif len(a) == 2:
-            msg = a[1] + ': ' + chrs_roll()
-        else:
-            show_chrs_help()
+            if a[1] == 'full':
+                msg = 'Сила: ' + chrs_roll() + '\n'
+                msg += 'Ловкость: ' + chrs_roll() + '\n'
+                msg += 'Телосложение: ' + chrs_roll() + '\n'
+                msg += 'Интеллект: ' + chrs_roll() + '\n'
+                msg += 'Мудрость: ' + chrs_roll() + '\n'
+                msg += 'Харизма: ' + chrs_roll()
+            else:
+                msg = a[1] + ': ' + chrs_roll()
+        elif len(a) > 2:
+            target = message.author
+            msg = show_chrs_help()
 
     if message.content.startswith('!roll'):
         _c = message.content.split(' ')
         if len(_c) == 1:
             msg = show_roll_help()
-            target = message.author
         elif len(_c) > 1:
             msg = roll(_c)
+            target = message.author
 
     if msg:
         await client.send_message(target, msg)
