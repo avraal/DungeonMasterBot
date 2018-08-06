@@ -3,7 +3,7 @@ import random
 import math
 import src
 
-TOKEN = src.__TOKEN_BAKA_
+TOKEN = src.__TOKEN_MASTER_
 client = discord.Client()
 
 
@@ -281,9 +281,9 @@ async def on_message(message):
         _c = message.content.split(' ')
         if len(_c) == 1:
             msg = show_roll_help()
+            target = message.author
         elif len(_c) > 1:
             msg = roll(_c)
-            target = message.author
 
     if msg:
         await client.send_message(target, msg)
