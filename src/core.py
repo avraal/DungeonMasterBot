@@ -7,6 +7,11 @@ TOKEN = src.__TOKEN_MASTER_
 client = discord.Client()
 
 
+def send_frog():
+    frog = ':frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::white_circle:️:black_circle:️:black_circle:️:white_circle:️:frog::frog::frog::white_circle:️:black_circle:️:black_circle:️:white_circle:️\n' + ':frog::white_circle:️:black_circle:️:black_circle:️:white_circle:️:black_circle:️:white_circle:️:frog::white_circle:️:black_circle:️:black_circle:️:white_circle:️:black_circle:️:white_circle:️\n' + ':frog::white_circle:️:black_circle:️:white_circle:️:black_circle:️:black_circle:️:white_circle:️:frog::white_circle:️:black_circle:️:white_circle:️:black_circle:️:black_circle:️:white_circle:️\n' + ':frog::frog::white_circle:️:black_circle:️:white_circle:️:white_circle:️:frog::frog::frog::white_circle:️:black_circle:️:white_circle:️:white_circle:️\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':red_circle::red_circle::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::red_circle::red_circle::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle:\n' + ':frog::frog::frog::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog: '
+    return frog
+
+
 def gold(player_class):
     if not player_class:
         return 0
@@ -37,8 +42,8 @@ def attack(who, damage, target, target_ac, modifier=0):
     if not target_ac.isdigit():
         return res + ': КД цели'
 
-    if not isinstance(modifier, int):
-        return res + ': Модификатор'
+    # if not isinstance(modifier, int):
+    #     return res + ': Модификатор'
 
     _d = damage.split('d')
     _dmg = 0
@@ -63,7 +68,10 @@ def attack(who, damage, target, target_ac, modifier=0):
                  'Нет',
                  '{} кувыркался как мог'.format(target),
                  '{} сел на пегаса и улетел'.format(target),
-                 '{} увернулся, потому что может'.format(target)]
+                 '{} увернулся, потому что может'.format(target),
+                 'Запуская магический шар в {}, шар летел так долго, что он обрёл разум, и когда он был возле {}, '
+                 'шар решил полететь по своим делам'.format(target, target),
+                 'Купил {} шляпу на бонус к уворотам, а она ему как раз'.format(target)]
 
     attack_list = ['{} сначала не мог попасть по {}, а потом как смог. Аж на {} урона'.format(who, target, damage),
                    '{} нанёс {} урона, а потом проснулся. А потом снова нанёс {} урона'.format(who, damage, damage),
@@ -74,7 +82,20 @@ def attack(who, damage, target, target_ac, modifier=0):
                    'Атакуя мизинцем по тумбочке, {} нанёс {} урона и {}'.format(who, damage, target),
                    '{} угостил {} шаурмой. Пищёвое отравление в {} урона'.format(who, target, damage),
                    '{} выпил зелье здоровья 2 раза. Как известно, плюс на плюс даёт минус. {} получает {} урона'.format(
-                       target, target, damage)]
+                       target, target, damage),
+                   '{} мастерски пытался уворачиваться, но сегодня кубики не на его стороне аж на {} урона'.format(
+                       target, damage),
+                   'Путь к сердцу {} лежит через {} урона'.format(target, damage),
+                   '{} роняет не только запад, но и {} на {} урона'.format(who, target, damage)]
+
+    if modifier == '666':
+        res = ''
+        for x in range(len(miss_list)):
+            res += str(x) + ')' + miss_list[x] + '\n'
+        res += '\n'
+        for x in range(len(attack_list)):
+            res += str(x) + ')' + attack_list[x] + '\n'
+        return res
 
     m = int(random.uniform(1, 20))
     print(m)
@@ -87,7 +108,8 @@ def attack(who, damage, target, target_ac, modifier=0):
     if m == 20:
         res = 'Критическое попадание по ' + target
     elif m == 1:
-        res = 'Критический промах'
+        res = 'Критический промах\n'
+        res += send_frog()
 
     return res
 
@@ -258,6 +280,9 @@ async def on_message(message):
         else:
             target = message.author
             msg = show_gold_help()
+
+    if message.content.startswith('!frog'):
+        msg = send_frog()
 
     if message.content.startswith('!chrs'):
         a = message.content.split(' ')
