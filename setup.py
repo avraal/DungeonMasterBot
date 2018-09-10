@@ -8,6 +8,6 @@ setup(
     author='Andrew Volski',
     url='https://github.com/avraal/DungeonMasterBot',
     author_email='andrew.volski@gmail.com',
-    install_requires=['discord'],
+    install_requires=['discord', 'requests'],
     description='Simple Discord bot for help players'
 )
