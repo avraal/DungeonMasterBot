@@ -1,6 +1,7 @@
 import discord
 import random
 import math
+import requests
 import src
 
 TOKEN = src.__TOKEN_MASTER_
@@ -135,50 +136,45 @@ def dice_parse(dice):
     return _text_info
 
 
+def get_help_response():
+    data = requests.post('http://taskbox.zzz.com.ua/execCommand.php?', data={'from': 'Discord', 'cmd': 'help'})
+    return data
+
+
 def show_help():
-    _res = show_roll_help()
-    _res += show_attack_help()
-    _res += show_chrs_help()
-    _res += show_gold_help()
+    _r = requests.post('http://taskbox.zzz.com.ua/execCommand.php?', data={'from': 'Discord', 'cmd': 'help'})
+    _res = show_roll_help(_r)
+    _res += show_attack_help(_r)
+    _res += show_chrs_help(_r)
+    _res += show_gold_help(_r)
+    _res += '\nMessage from ' + _r.json()['text'][0]['from']
     return _res
 
 
-def show_roll_help():
+def show_roll_help(req):
     _res = '```dsconfig\n'
-    _res += 'Используйте команду !roll для генерации случайных значений\n'
-    _res += 'Возможные варианты использования этой команды:\n'
-    _res += '!roll 2d4\n!roll 4d8 +2\n!roll 1d10 1\n!roll 1d20 -3\n'
-    _res += 'Букву `d` можно заменить на букву `к`\n'
+    _res += req.json()['text'][0]['roll']
     _res += '```\n'
     return _res
 
 
-def show_attack_help():
+def show_attack_help(req):
     _res = '```dsconfig\n'
-    _res += 'Команда !attack позволит вам воспроизвести простую сцену с нанесением урона\n'
-    _res += 'Формат: `!attack <инициатор> <урон> <цель> <КД цели> [<модификатор>]`\n'
-    _res += 'Например:\n'
-    _res += '!attack Трактирщик 5 Гоблин 10\n'
-    _res += '!attack Гоблин 9 Трактирщик 8 +2\n'
-    _res += '!attack Трактирщик 2d4 Таракан 4\n'
+    _res += req.json()['text'][0]['attack']
     _res += '```\n'
     return _res
 
 
-def show_chrs_help():
+def show_chrs_help(req):
     _res = '```dsconfig\n'
-    _res += 'Команда `!chrs` позволяет посчитать значение вашей характеристики и модификатор для неё\n'
-    _res += 'Используйте `!chrs Телосложение` для того, чтобы высчитать значение вашей характеристики\n'
-    _res += 'Или `!chrs` чтобы получить значение для анонимной характеристики\n'
-    _res += '`!chrs full` позволит вам получить полный набор характеристик\n'
+    _res += req.json()['text'][0]['chrs']
     _res += '```\n'
     return _res
 
 
-def show_gold_help():
+def show_gold_help(req):
     _res = '```dsconfig\n'
-    _res += 'Быстрая генерация количества золота для вашего персонажа\n'
-    _res += 'Используйте `!gold <класс>` чтобы узнать сколько у вас золота\n'
+    _res += req.json()['text'][0]['gold']
     _res += '```\n'
     return _res
 
@@ -270,7 +266,7 @@ async def on_message(message):
         elif len(a) == 6:
             msg = attack(a[1], a[2], a[3], a[4], a[5])
         else:
-            msg = show_attack_help()
+            msg = show_attack_help(get_help_response())
             target = message.author
 
     if message.content.startswith('!gold'):
@@ -279,7 +275,7 @@ async def on_message(message):
             msg = gold(a[1])
         else:
             target = message.author
-            msg = show_gold_help()
+            msg = show_gold_help(get_help_response())
 
     if message.content.startswith('!frog'):
         msg = send_frog()
@@ -300,12 +296,12 @@ async def on_message(message):
                 msg = a[1] + ': ' + chrs_roll()
         elif len(a) > 2:
             target = message.author
-            msg = show_chrs_help()
+            msg = show_chrs_help(get_help_response())
 
     if message.content.startswith('!roll'):
         _c = message.content.split(' ')
         if len(_c) == 1:
-            msg = show_roll_help()
+            msg = show_roll_help(get_help_response())
             target = message.author
         elif len(_c) > 1:
             msg = roll(_c)
