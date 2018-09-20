@@ -4,8 +4,33 @@ import math
 import requests
 import src
 
-TOKEN = src.__TOKEN_MASTER_
+TOKEN = src.__TOKEN_BAKA_
 client = discord.Client()
+
+# midety, infernion, Freddy_Krueger
+
+me_list = ['268063167299584001']
+
+member_list = ['262139393203109890',
+               '357202311187136512',
+               '295946057152593930',
+               '219113291706925056']
+
+
+# TODO: Added Veronic
+
+
+def send_invites(author, invite_link):
+    message = 'Здравствуй, путник. Пишу тебе, так как нуждаюсь в твоей помощи. Недавно я и мои братья смогли отыскать ' \
+              'давно затерянную шахту. Это не просто шахта, для нас и для всего материка Фаэруна она несёт огромную ' \
+              'ценность. Но, о подробностях позже. Я буду ждать тебя в таверне Гнилое Яблоко, что в Невервинтере, ' \
+              'приходи, если хочешь увековечить своё имя в истории Фаэруна.'
+
+    embed = discord.Embed(title='Рудники Фанделвера', description=message, color=0x00ff00)
+    embed.set_thumbnail(url=author.avatar_url)
+    embed.add_field(name='Подпись', value='Гандрен Роксикер', inline=True)
+    embed.add_field(name='Таверна Гнилое Яблоко', value=invite_link)
+    return embed
 
 
 def send_frog():
@@ -23,7 +48,7 @@ def gold(player_class):
     player_class = player_class.lower()
     match = [s for s in class_list if player_class in s.split(' ')[0]]
     if not match:
-        return show_gold_help()
+        return show_gold_help(get_help_response())
     _tmp = match[0].split(' ')
     gold_count = just_roll(_tmp[1])
     if _tmp[0] == str.lower('монах'):
@@ -116,6 +141,7 @@ def attack(who, damage, target, target_ac, modifier=0):
 
 
 def dice_parse(dice):
+    print(dice)
     _d = dice[1].split('d')
     if len(_d) != 2:
         _d = dice[1].split('к')
@@ -137,12 +163,13 @@ def dice_parse(dice):
 
 
 def get_help_response():
-    data = requests.post('http://taskbox.zzz.com.ua/execCommand.php?', data={'from': 'Discord', 'cmd': 'help'})
+    data = requests.post('http://taskbox.zzz.com.ua/execCommand.php', data={'from': 'Discord', 'cmd': 'help'})
+    print(data)
     return data
 
 
 def show_help():
-    _r = requests.post('http://taskbox.zzz.com.ua/execCommand.php?', data={'from': 'Discord', 'cmd': 'help'})
+    _r = requests.post('http://taskbox.zzz.com.ua/execCommand.php', data={'from': 'Discord', 'cmd': 'help'})
     _res = show_roll_help(_r)
     _res += show_attack_help(_r)
     _res += show_chrs_help(_r)
@@ -247,6 +274,47 @@ def roll(c):
     return msg
 
 
+def show_base_info():
+    step1 = '```\nОСТОРОЖНО, МНОГО ТЕКСТА\n```'
+    step2 = 'Прежде чем создавать своего персонажа, потратьте немного времени на то, чтобы представить кем бы вы ' \
+            'хотели играть, не взирая на то какие классы и расы есть в dnd\n' \
+            'В игре нет ограничений по типу "За определённую расу могут играть определённые классы", каждый играет ' \
+            'кого и как хочет\n' \
+            'Через некоторое время я скину вам необходимую инфу для того, чтобы создать персонажа и ознакомиться с ' \
+            'правилами в целом\n' \
+            'Всё это будет описано в книге под названием "Книга игрока" на 330 страниц, я скину pdf(изменено)\n' \
+            'Не пугайтесь объёма информации в том руководстве, ибо в нём расписано абсолютно всё, что вам будет ' \
+            'необходимо\n' \
+            'Хочу заметить, что лучше всего изучать эту книгу в процессе создания персонажа\n' \
+            'Когда я скину вам книгу, вам нужно будет:\n' \
+            '1. Выбрать расу\n' \
+            '2. Выбрать класс\n' \
+            '3. Придумать предысторию\n' \
+            '4. Придумать характер\n\n' \
+            '1 и 2 пункт вы можете выполнять прямо сейчас\n'
+
+    return step1 + step2
+
+
+@client.event
+async def on_member_join(member):
+    channel = client.get_channel('491860222495686676')
+    admin = await client.get_user_info(me_list[0])
+    await client.send_message(channel, 'Hello, world')
+    c = 0
+    for m in channel.server.members:
+        if m.id in member_list:
+            c = c + 1
+
+    await client.send_message(admin, 'Count: ' + str(c) + ' / ' + str(len(member_list)))
+
+    if c == len(member_list):
+        msg = show_base_info()
+        await client.send_message(channel, msg)
+        for u in member_list:
+            await client.send_message(u, show_help())
+
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -255,9 +323,33 @@ async def on_message(message):
     target = message.channel
     msg = ''
 
+    if message.content.startswith('!check'):
+        msg = show_base_info()
+
     if message.content.startswith('!help'):
         msg = show_help()
         target = message.author
+
+    if message.content.startswith('!invite'):
+        channel = client.get_channel('491860222495686676')
+        invite_link = await client.create_invite(destination=channel)
+        embed_author = await client.get_user_info('474484991485673472')
+        users = []
+        for m in me_list:
+            users.append(await client.get_user_info(m))
+
+        embed = send_invites(embed_author, invite_link)
+
+        for u in users:
+            await client.send_message(u, embed=embed)
+
+        # role = []
+        # for r in message.server.roles:
+        #     if r.id == '491859757460881408':
+        #         role.append(r)
+        # for m in range(len(member_list)):
+        #     _t = message.server.get_member(member_list[m])
+        #     await client.add_roles(_t, *role)
 
     if message.content.startswith('!attack'):
         a = message.content.split(' ')
