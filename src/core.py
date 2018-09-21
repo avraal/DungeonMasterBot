@@ -7,7 +7,7 @@ import src
 TOKEN = src.__TOKEN_BAKA_
 client = discord.Client()
 
-# midety, infernion, Freddy_Krueger
+# midety, infernion, Freddy_Krueger, Oretachi (лсм) [Максим]
 
 me_list = ['268063167299584001']
 
@@ -26,7 +26,7 @@ def send_invites(author, invite_link):
               'ценность. Но, о подробностях позже. Я буду ждать тебя в таверне Гнилое Яблоко, что в Невервинтере, ' \
               'приходи, если хочешь увековечить своё имя в истории Фаэруна.'
 
-    embed = discord.Embed(title='Рудники Фанделвера', description=message, color=0x00ff00)
+    embed = discord.Embed(title='Рудники Фанделвера', description=message, color=0x35af1a)
     embed.set_thumbnail(url=author.avatar_url)
     embed.add_field(name='Подпись', value='Гандрен Роксикер', inline=True)
     embed.add_field(name='Таверна Гнилое Яблоко', value=invite_link)
@@ -296,23 +296,31 @@ def show_base_info():
     return step1 + step2
 
 
-@client.event
-async def on_member_join(member):
-    channel = client.get_channel('491860222495686676')
-    admin = await client.get_user_info(me_list[0])
-    await client.send_message(channel, 'Hello, world')
-    c = 0
-    for m in channel.server.members:
-        if m.id in member_list:
-            c = c + 1
+def modif_parse(modif, chrs):
+    for k, v in chrs.items():
+        tmp = v.split(' ')[1].replace('(', '').replace(')', '')
+        modif[k] = tmp
 
-    await client.send_message(admin, 'Count: ' + str(c) + ' / ' + str(len(member_list)))
+    return modif
 
-    if c == len(member_list):
-        msg = show_base_info()
-        await client.send_message(channel, msg)
-        for u in member_list:
-            await client.send_message(u, show_help())
+
+def skills_roll(chrs):
+    modif = {'Сила': 0, 'Мудрость': 0, 'Интеллект': 0, 'Ловкость': 0, 'Телосложение': 0, 'Харизма': 0}
+    modif = modif_parse(modif, chrs)
+    for k, v in modif.items():
+        print(k + ': ' + v)
+
+    skills = {'Акробатика': modif['Ловкость'], 'Обман': modif['Харизма'], 'Медицина': modif['Мудрость'],
+              'Анализ': modif['Интеллект'], 'Ловкость рук': modif['Ловкость'], 'Атлетика': modif['Сила'],
+              'Внимательность': modif['Мудрость'], 'Выживание': modif['Мудрость'], 'Выступление': modif['Харизма'],
+              'Запугивание': modif['Харизма'], 'История': modif['Интеллект'], 'Проницательность': modif['Мудрость'],
+              'Религия': modif['Интеллект'], 'Скрытность': modif['Ловкость'], 'Убеждение': modif['Харизма'],
+              'Уход за животными': modif['Мудрость']}
+    mes = '\n`Навыки:`\n\n'
+    for k, v in skills.items():
+        mes += k + ': ' + v + '\n'
+    mes += 'Не забудьте добавить + Бонус мастерства выбранным навыкам'
+    return mes
 
 
 @client.event
@@ -331,25 +339,35 @@ async def on_message(message):
         target = message.author
 
     if message.content.startswith('!invite'):
-        channel = client.get_channel('491860222495686676')
-        invite_link = await client.create_invite(destination=channel)
-        embed_author = await client.get_user_info('474484991485673472')
-        users = []
-        for m in me_list:
-            users.append(await client.get_user_info(m))
+        can_permission = False
+        for r in message.author.roles:
+            if r.name != 'Dungeon master':
+                msg = 'У вас нет прав для отправки этой команды'
+            else:
+                can_permission = True
+                msg = ''
+                break
 
-        embed = send_invites(embed_author, invite_link)
+        if can_permission is True:
+            role = []
+            for r in message.server.roles:
+                if r.id == '491859757460881408':  # Role "Dungeon Player"
+                    role.append(r)
+            for m in range(len(me_list)):  # TODO: change me_list on member_list
+                _t = message.server.get_member(me_list[m])  # TODO: change me_list on member_list
+                await client.add_roles(_t, *role)
 
-        for u in users:
-            await client.send_message(u, embed=embed)
+            channel = client.get_channel('491860222495686676')  # Channel "Гнилое Яблоко"
+            invite_link = await client.create_invite(destination=channel)
+            embed_author = await client.get_user_info('474484991485673472')  # User "Dungeon Master"
+            users = []
+            for m in me_list:  # TODO: change me_list on member_list
+                users.append(await client.get_user_info(m))
 
-        # role = []
-        # for r in message.server.roles:
-        #     if r.id == '491859757460881408':
-        #         role.append(r)
-        # for m in range(len(member_list)):
-        #     _t = message.server.get_member(member_list[m])
-        #     await client.add_roles(_t, *role)
+            embed = send_invites(embed_author, invite_link)
+
+            for u in users:
+                await client.send_message(u, embed=embed)
 
     if message.content.startswith('!attack'):
         a = message.content.split(' ')
@@ -377,13 +395,20 @@ async def on_message(message):
         if len(a) == 1:
             msg = chrs_roll()
         elif len(a) == 2:
+            chrs = {'Сила': '', 'Ловкость': '', 'Телосложение': '', 'Интеллект': '', 'Мудрость': '', 'Харизма': ''}
+
             if a[1] == 'full':
-                msg = 'Сила: ' + chrs_roll() + '\n'
-                msg += 'Ловкость: ' + chrs_roll() + '\n'
-                msg += 'Телосложение: ' + chrs_roll() + '\n'
-                msg += 'Интеллект: ' + chrs_roll() + '\n'
-                msg += 'Мудрость: ' + chrs_roll() + '\n'
-                msg += 'Харизма: ' + chrs_roll()
+                chrs['Сила'] = chrs_roll()
+                chrs['Ловкость'] = chrs_roll()
+                chrs['Телосложение'] = chrs_roll()
+                chrs['Интеллект'] = chrs_roll()
+                chrs['Мудрость'] = chrs_roll()
+                chrs['Харизма'] = chrs_roll()
+
+                for k, v in chrs.items():
+                    msg += k + ': ' + v + '\n'
+
+                msg += skills_roll(chrs)
             else:
                 msg = a[1] + ': ' + chrs_roll()
         elif len(a) > 2:
