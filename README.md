@@ -1,2 +1,2 @@
 # DungeonMasterBot
-https://pypi.org/manage/project/DungeonMasterBot
+https://pypi.org/project/DungeonMasterBot/
