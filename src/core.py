@@ -1,41 +1,32 @@
+import re
+import datetime
 import discord
 import random
 import math
 import requests
 import src
+from src.botcommands import BotCommands
 
-TOKEN = src.__TOKEN_BAKA_
+TOKEN = src.__TOKEN_MASTER_
 client = discord.Client()
 
-# midety, infernion, Freddy_Krueger, Oretachi (лсм) [Максим]
 
-me_list = ['268063167299584001']
-
-member_list = ['262139393203109890',
-               '357202311187136512',
-               '295946057152593930',
-               '219113291706925056']
-
-
-# TODO: Added Veronic
-
-
-def send_invites(author, invite_link):
-    message = 'Здравствуй, путник. Пишу тебе, так как нуждаюсь в твоей помощи. Недавно я и мои братья смогли отыскать ' \
-              'давно затерянную шахту. Это не просто шахта, для нас и для всего материка Фаэруна она несёт огромную ' \
-              'ценность. Но, о подробностях позже. Я буду ждать тебя в таверне Гнилое Яблоко, что в Невервинтере, ' \
-              'приходи, если хочешь увековечить своё имя в истории Фаэруна.'
-
-    embed = discord.Embed(title='Рудники Фанделвера', description=message, color=0x35af1a)
+def send_invites(author, invite_link, module_name, desc, channel_name):
+    embed = discord.Embed(title=module_name, description=desc, color=0x35af1a)
     embed.set_thumbnail(url=author.avatar_url)
-    embed.add_field(name='Подпись', value='Гандрен Роксикер', inline=True)
-    embed.add_field(name='Таверна Гнилое Яблоко', value=invite_link)
+    embed.add_field(name='Подпись', value=channel_name, inline=True)
+    embed.add_field(name="DungeonMaster", value=invite_link)
     return embed
 
 
 def send_frog():
     frog = ':frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::white_circle:️:black_circle:️:black_circle:️:white_circle:️:frog::frog::frog::white_circle:️:black_circle:️:black_circle:️:white_circle:️\n' + ':frog::white_circle:️:black_circle:️:black_circle:️:white_circle:️:black_circle:️:white_circle:️:frog::white_circle:️:black_circle:️:black_circle:️:white_circle:️:black_circle:️:white_circle:️\n' + ':frog::white_circle:️:black_circle:️:white_circle:️:black_circle:️:black_circle:️:white_circle:️:frog::white_circle:️:black_circle:️:white_circle:️:black_circle:️:black_circle:️:white_circle:️\n' + ':frog::frog::white_circle:️:black_circle:️:white_circle:️:white_circle:️:frog::frog::frog::white_circle:️:black_circle:️:white_circle:️:white_circle:️\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':red_circle::red_circle::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::red_circle::red_circle::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle:\n' + ':frog::frog::frog::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle::red_circle:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog::frog:\n' + ':frog::frog::frog::frog::frog::frog::frog::frog::frog: '
     return frog
+
+
+def send_face():
+    face = ':new_moon::new_moon::new_moon::new_moon::new_moon::new_moon::new_moon::new_moon:\n' + ':new_moon::new_moon::new_moon::new_moon::new_moon::new_moon::new_moon::new_moon:\n' + ':new_moon::new_moon::new_moon::waxing_crescent_moon::full_moon::waning_gibbous_moon::new_moon::new_moon:\n' + ':new_moon::waxing_crescent_moon::full_moon::full_moon::full_moon::full_moon::waning_gibbous_moon::new_moon:\n' + ':new_moon::waxing_gibbous_moon::eye::nose::eye::full_moon::full_moon::last_quarter_moon:\n' + ':new_moon::full_moon::full_moon::lips::full_moon::full_moon::full_moon::ear:\n' + ':new_moon::waxing_gibbous_moon::full_moon::full_moon::full_moon::full_moon::full_moon::full_moon:\n' + ':new_moon::waxing_crescent_moon::full_moon::full_moon::full_moon::full_moon::full_moon::full_moon:\n' + ':new_moon::new_moon::full_moon::full_moon::full_moon::full_moon::full_moon::full_moon:\n'
+    return face
 
 
 def gold(player_class):
@@ -48,7 +39,7 @@ def gold(player_class):
     player_class = player_class.lower()
     match = [s for s in class_list if player_class in s.split(' ')[0]]
     if not match:
-        return show_gold_help(get_help_response())
+        return show_help(BotCommands.GOLD)
     _tmp = match[0].split(' ')
     gold_count = just_roll(_tmp[1])
     if _tmp[0] == str.lower('монах'):
@@ -132,7 +123,8 @@ def attack(who, damage, target, target_ac, modifier=0):
         res = miss_list[int(random.uniform(0, len(miss_list)))]
 
     if m == 20:
-        res = 'Критическое попадание по ' + target
+        res = 'Критическое попадание по ' + target + "\n"
+        res += send_face()
     elif m == 1:
         res = 'Критический промах\n'
         res += send_frog()
@@ -163,45 +155,23 @@ def dice_parse(dice):
 
 
 def get_help_response():
-    data = requests.post('http://taskbox.zzz.com.ua/execCommand.php', data={'from': 'Discord', 'cmd': 'help'})
-    print(data)
+    data = requests.post(src.__exec_command_url__, data={'from': 'Discord', 'cmd': 'help'})
     return data
 
 
 def show_help():
-    _r = requests.post('http://taskbox.zzz.com.ua/execCommand.php', data={'from': 'Discord', 'cmd': 'help'})
-    _res = show_roll_help(_r)
-    _res += show_attack_help(_r)
-    _res += show_chrs_help(_r)
-    _res += show_gold_help(_r)
+    _r = requests.post(src.__exec_command_url__, data={'from': 'Discord', 'cmd': 'help'})
+    _res = ""
+
+    for r in BotCommands:
+        _res += show_help(r, _r)
     _res += '\nMessage from ' + _r.json()['text'][0]['from']
     return _res
 
 
-def show_roll_help(req):
+def show_help(command_name, req=get_help_response()):
     _res = '```dsconfig\n'
-    _res += req.json()['text'][0]['roll']
-    _res += '```\n'
-    return _res
-
-
-def show_attack_help(req):
-    _res = '```dsconfig\n'
-    _res += req.json()['text'][0]['attack']
-    _res += '```\n'
-    return _res
-
-
-def show_chrs_help(req):
-    _res = '```dsconfig\n'
-    _res += req.json()['text'][0]['chrs']
-    _res += '```\n'
-    return _res
-
-
-def show_gold_help(req):
-    _res = '```dsconfig\n'
-    _res += req.json()['text'][0]['gold']
+    _res += req.json()['text'][0][command_name.value]
     _res += '```\n'
     return _res
 
@@ -274,28 +244,6 @@ def roll(c):
     return msg
 
 
-def show_base_info():
-    step1 = '```\nОСТОРОЖНО, МНОГО ТЕКСТА\n```'
-    step2 = 'Прежде чем создавать своего персонажа, потратьте немного времени на то, чтобы представить кем бы вы ' \
-            'хотели играть, не взирая на то какие классы и расы есть в dnd\n' \
-            'В игре нет ограничений по типу "За определённую расу могут играть определённые классы", каждый играет ' \
-            'кого и как хочет\n' \
-            'Через некоторое время я скину вам необходимую инфу для того, чтобы создать персонажа и ознакомиться с ' \
-            'правилами в целом\n' \
-            'Всё это будет описано в книге под названием "Книга игрока" на 330 страниц, я скину pdf(изменено)\n' \
-            'Не пугайтесь объёма информации в том руководстве, ибо в нём расписано абсолютно всё, что вам будет ' \
-            'необходимо\n' \
-            'Хочу заметить, что лучше всего изучать эту книгу в процессе создания персонажа\n' \
-            'Когда я скину вам книгу, вам нужно будет:\n' \
-            '1. Выбрать расу\n' \
-            '2. Выбрать класс\n' \
-            '3. Придумать предысторию\n' \
-            '4. Придумать характер\n\n' \
-            '1 и 2 пункт вы можете выполнять прямо сейчас\n'
-
-    return step1 + step2
-
-
 def modif_parse(modif, chrs):
     for k, v in chrs.items():
         tmp = v.split(' ')[1].replace('(', '').replace(')', '')
@@ -316,11 +264,68 @@ def skills_roll(chrs):
               'Запугивание': modif['Харизма'], 'История': modif['Интеллект'], 'Проницательность': modif['Мудрость'],
               'Религия': modif['Интеллект'], 'Скрытность': modif['Ловкость'], 'Убеждение': modif['Харизма'],
               'Уход за животными': modif['Мудрость']}
-    mes = '\n`Навыки:`\n\n'
+    mes = '\nНавыки:\n\n'
     for k, v in skills.items():
         mes += k + ': ' + v + '\n'
     mes += 'Не забудьте добавить + Бонус мастерства выбранным навыкам'
     return mes
+
+
+def new_module(module_name, author_id):
+    r = requests.post(src.__create_dnd_module__url__, data={'name': module_name, 'author_d_id': author_id})
+    if r.json()["code"] == 1:
+        msg = 'Модуль ' + module_name + ' успешно зарегистрирован\n'
+    elif r.json()["code"] == 2:
+        msg = 'У вас уже есть модуль с таким именем'
+    elif r.json()["code"] == 0:
+        msg = 'Не удалось добавить модуль'
+    else:
+        msg = 'Не удалось присоедениться к базе данных'
+    return msg
+
+
+def add_user_to_module(module_id, user_discord_id):
+    r = requests.post(src.__create_dnd_user_url__, data={'discord_id': user_discord_id, 'module_id': module_id})
+    # print(r.content)
+    return r.json()["code"]
+
+
+def get_list_of_modules(author_id):
+    r = requests.post(src.__get_dnd_modules_url__, data={'author_d_id': author_id})
+    # print(r.content)
+    return r.json()["modules"]
+
+
+def get_users_info():
+    r = requests.post(src.__get_dnd_users_url__)
+    # print(r.content)
+    return r.json()["users"]
+
+
+def parse_invite_text(splitted_text):
+    result_array = ""
+    for i in range(len(splitted_text)):
+        if splitted_text[i].startswith('\"'):
+            result_array += splitted_text[i]
+            if splitted_text[i].endswith('\"'):
+                splitted_text.remove(splitted_text[i])
+                break
+            splitted_text.remove(splitted_text[i])
+            current_position = i
+            while not splitted_text[current_position].endswith("\""):
+                result_array += ' ' + splitted_text[current_position]
+                splitted_text.remove(splitted_text[current_position])
+            result_array += ' ' + splitted_text[current_position]
+            splitted_text.remove(splitted_text[current_position])
+            break
+    return re.sub('\"', '', result_array)
+
+
+def parse_channel_name(channel_name):
+    name = channel_name[1:]
+    name = name.replace('-', ' ')
+    name = name.title()
+    return name
 
 
 @client.event
@@ -328,103 +333,223 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    target = message.channel
-    msg = ''
+    try:
+        target = message.channel
+        msg = ''
 
-    if message.content.startswith('!check'):
-        msg = show_base_info()
+        if message.content.startswith(BotCommands.HELP.value):
+            _res = ""
+            target = message.author
+            for r in BotCommands:
+                _res = show_help(r)
+                await client.send_message(target, _res)
+            msg = "Получен весь список команд"
 
-    if message.content.startswith('!help'):
-        msg = show_help()
-        target = message.author
+        if message.content.startswith(BotCommands.INVITE.value):
+            a = message.content.split(' ')
 
-    if message.content.startswith('!invite'):
-        can_permission = False
-        for r in message.author.roles:
-            if r.name != 'Dungeon master':
-                msg = 'У вас нет прав для отправки этой команды'
+            can_permission = False
+            try:
+                for r in message.author.roles:
+                    if r.name != 'Dungeon master':
+                        msg = 'У вас нет прав для отправки этой команды'
+                    else:
+                        can_permission = True
+                        msg = ''
+                        break
+            except AttributeError:  # Если пользователь напишет это боту в лс
+                msg = 'Эту команду необходимо вводить на сервере'
+                target = message.author
+
+            if not can_permission:
+                pass
             else:
-                can_permission = True
-                msg = ''
-                break
+                command = message.content
+                found = False
+                role = []
+                for r in message.server.roles:
+                    if r.name == 'Dungeon Player':  # Role "Dungeon Player"
+                        role.append(r)
+                        found = True
+                        break
+                if not found:
+                    msg = "На сервере отсутствует необходимая роль\n"
+                    msg += show_help(BotCommands.INVITE)
+                    target = message.author
+                else:
+                    embed_author = await client.get_user_info('474484991485673472')  # User "Dungeon Master"
+                    module_name = ""
+                    module_desc = ""
+                    player_id = re.sub('<|>|@!', " ", a[1])
+                    player_id = player_id.replace(" ", "")
+                    u = message.server.get_member(player_id)
+                    await client.add_roles(u, *role)
 
-        if can_permission is True:
-            role = []
-            for r in message.server.roles:
-                if r.id == '491859757460881408':  # Role "Dungeon Player"
-                    role.append(r)
-            for m in range(len(me_list)):  # TODO: change me_list on member_list
-                _t = message.server.get_member(me_list[m])  # TODO: change me_list on member_list
-                await client.add_roles(_t, *role)
+                    if command.count('\"') == 2 or command.count('\"') == 4:
+                        module_name = parse_invite_text(a)
+                        module_desc = parse_invite_text(a)
+                        channel_id = re.sub("<|>|#", " ", a[2])
+                        channel_id = channel_id.replace(" ", "")
+                        channel = client.get_channel(channel_id)
+                        channel_link = await client.create_invite(destination=channel, max_age=86400, unique=False)
+                        embed = send_invites(embed_author, channel_link, module_name, module_desc, channel.name)
+                        u = await client.get_user_info(player_id)
+                        await client.send_message(u, embed=embed)
+                    elif len(a) == 5:
+                        channel_id = re.sub("<|>|#", " ", a[4])
+                        channel_id = channel_id.replace(" ", "")
+                        channel = client.get_channel(channel_id)
+                        channel_link = await client.create_invite(destination=channel, max_age=86400, unique=False)
+                        embed = send_invites(embed_author, channel_link, a[2], a[3], channel.name)
+                        u = await client.get_user_info(player_id)
+                        await client.send_message(u, embed=embed)
+                    else:
+                        msg = show_help(BotCommands.INVITE)
+                        target = message.author
 
-            channel = client.get_channel('491860222495686676')  # Channel "Гнилое Яблоко"
-            invite_link = await client.create_invite(destination=channel)
-            embed_author = await client.get_user_info('474484991485673472')  # User "Dungeon Master"
-            users = []
-            for m in me_list:  # TODO: change me_list on member_list
-                users.append(await client.get_user_info(m))
-
-            embed = send_invites(embed_author, invite_link)
-
-            for u in users:
-                await client.send_message(u, embed=embed)
-
-    if message.content.startswith('!attack'):
-        a = message.content.split(' ')
-        if len(a) == 5:
-            msg = attack(a[1], a[2], a[3], a[4])
-        elif len(a) == 6:
-            msg = attack(a[1], a[2], a[3], a[4], a[5])
-        else:
-            msg = show_attack_help(get_help_response())
-            target = message.author
-
-    if message.content.startswith('!gold'):
-        a = message.content.split(' ')
-        if len(a) == 2:
-            msg = gold(a[1])
-        else:
-            target = message.author
-            msg = show_gold_help(get_help_response())
-
-    if message.content.startswith('!frog'):
-        msg = send_frog()
-
-    if message.content.startswith('!chrs'):
-        a = message.content.split(' ')
-        if len(a) == 1:
-            msg = chrs_roll()
-        elif len(a) == 2:
-            chrs = {'Сила': '', 'Ловкость': '', 'Телосложение': '', 'Интеллект': '', 'Мудрость': '', 'Харизма': ''}
-
-            if a[1] == 'full':
-                chrs['Сила'] = chrs_roll()
-                chrs['Ловкость'] = chrs_roll()
-                chrs['Телосложение'] = chrs_roll()
-                chrs['Интеллект'] = chrs_roll()
-                chrs['Мудрость'] = chrs_roll()
-                chrs['Харизма'] = chrs_roll()
-
-                for k, v in chrs.items():
-                    msg += k + ': ' + v + '\n'
-
-                msg += skills_roll(chrs)
+        if message.content.startswith(BotCommands.ATTACK.value):
+            a = message.content.split(' ')
+            if len(a) == 5:
+                msg = attack(a[1], a[2], a[3], a[4])
+            elif len(a) == 6:
+                msg = attack(a[1], a[2], a[3], a[4], a[5])
             else:
-                msg = a[1] + ': ' + chrs_roll()
-        elif len(a) > 2:
-            target = message.author
-            msg = show_chrs_help(get_help_response())
+                msg = show_help(BotCommands.ATTACK)
+                target = message.author
 
-    if message.content.startswith('!roll'):
-        _c = message.content.split(' ')
-        if len(_c) == 1:
-            msg = show_roll_help(get_help_response())
-            target = message.author
-        elif len(_c) > 1:
-            msg = roll(_c)
+        # TODO: Change signature to '!add_user <@user> <module>'
+        if message.content.startswith(BotCommands.ADD_USER.value):
+            a = message.content.split(' ')
+            name = ""
+            if message.content.count('\"') == 2:
+                name = parse_invite_text(a)
+                print(name)
+            elif message.content.count('\"') == 0:
+                name = a[1]
+                a.remove(a[1])
+            print(name)
+            print(a)
+            if len(a) == 2:
+                try:
+                    user_id = re.sub('<|>|@!', " ", a[1])
+                    m_list = get_list_of_modules(message.author.id)
+                    if len(m_list) != 0:
+                        for m in m_list:
+                            if name == m['name']:
+                                msg = add_user_to_module(m['id'], user_id)
+                                print(msg)
+                                if msg == 1:
+                                    msg = 'Пользователь добавлен к модулю'
+                                elif msg == 2:
+                                    msg = 'Этот пользователь уже учавствует в указаном модуле'
+                                break
+                            else:
+                                msg = 'У вас нет модуля под названием ' + name
+                    else:
+                        msg = 'У вас нет модулей'
+                except AttributeError:
+                    msg = 'Пользователь с таким ником не найден'
+            else:
+                target = message.author
+                msg = show_help(BotCommands.ADD_USER)
 
-    if msg:
-        await client.send_message(target, msg)
+        if message.content.startswith(BotCommands.NEW_MODULE.value):
+            a = message.content.split(' ')
+            name = ""
+            if message.content.count('\"') == 2:
+                name = parse_invite_text(a)
+                msg = new_module(name, message.author.id)
+            else:
+                target = message.author
+                msg = show_help(BotCommands.NEW_MODULE)
+
+        if message.content.startswith(BotCommands.GOLD.value):
+            a = message.content.split(' ')
+            if len(a) == 2:
+                msg = gold(a[1])
+            else:
+                target = message.author
+                msg = show_help(BotCommands.GOLD)
+
+        if message.content.startswith(BotCommands.FROG.value):
+            msg = send_frog()
+
+        if message.content.startswith(BotCommands.FACE.value):
+            msg = send_face()
+
+        if message.content.startswith(BotCommands.SHOW_MODULES.value):
+            lst = get_list_of_modules(message.author.id)
+            for m in lst:
+                msg += '```\nНазвание: ' + m['name'] + '\nМастер: ' + message.author.name + '\n```\n'
+
+        if message.content.startswith(BotCommands.SHOW_USERS.value):
+            users_info = get_users_info()
+            user_wrap = []
+            current_user_discord_id = 0
+            count = 0
+            for i in users_info:
+                if i["DiscordID"] == current_user_discord_id:
+                    user_wrap[count-1]['Modules'].append(i['ModuleName'])
+                else:
+                    current_user_discord_id = i["DiscordID"]
+                    count += 1
+                    user_wrap.append({'UserID': current_user_discord_id, 'Modules': []})
+                    user_wrap[count-1]['Modules'].append(i['ModuleName'])
+            for u in user_wrap:
+                user = await client.get_user_info(u['UserID'])
+                msg += '```\nНик: ' + user.name + '\n'
+                if len(u['Modules']) != 0:
+                    msg += 'Модули: '
+                    for m in u['Modules']:
+                        msg += m
+                        if len(u['Modules']) > 1 and m != u['Modules'][-1]:
+                            msg += ', '
+                else:
+                    msg += 'Пользователь не участвует ни в одном модуле\n'
+                msg += '\n```\n'
+
+        if message.content.startswith(BotCommands.CHRS.value):
+            a = message.content.split(' ')
+            if len(a) == 1:
+                msg = show_help(BotCommands.CHRS)
+                print(msg)
+            elif len(a) == 2:
+                chrs = {'Сила': '', 'Ловкость': '', 'Телосложение': '', 'Интеллект': '', 'Мудрость': '', 'Харизма': ''}
+
+                if a[1] == 'full':
+                    chrs['Сила'] = chrs_roll()
+                    chrs['Ловкость'] = chrs_roll()
+                    chrs['Телосложение'] = chrs_roll()
+                    chrs['Интеллект'] = chrs_roll()
+                    chrs['Мудрость'] = chrs_roll()
+                    chrs['Харизма'] = chrs_roll()
+                    msg += '```'
+                    for k, v in chrs.items():
+                        msg += k + ': ' + v + '\n'
+
+                    msg += skills_roll(chrs)
+                    msg += '```'
+                else:
+                    msg = a[1] + ': ' + chrs_roll()
+            elif len(a) > 2:
+                target = message.author
+                msg = show_help(BotCommands.CHRS)
+
+        if message.content.startswith(BotCommands.ROLL.value):
+            _c = message.content.split(' ')
+            if len(_c) == 1:
+                msg = show_help(BotCommands.ROLL)
+                target = message.author
+            elif len(_c) > 1:
+                msg = roll(_c)
+
+        if msg:
+            await client.send_message(target, msg)
+    except Exception as e:
+        print(e.__doc__)
+        error_log = open("logs.txt", "a")
+        log = str(datetime.datetime.now()) + " [ERROR]: " + str(e.__doc__) + '\n'
+        error_log.write(log)
 
 
 @client.event
@@ -435,6 +560,5 @@ async def on_ready():
     print('-----')
     game = discord.Game(name='Dungeon & Dragons')
     await client.change_presence(game=game)
-
 
 client.run(TOKEN)
