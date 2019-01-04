@@ -1,4 +1,4 @@
-__version__ = '2.1'
+__version__ = '2.1.1'
 __TOKEN_BAKA_ = 'MzQ3MDIwNDkwMjQzODMzODU2.DkWVFQ.1htEWV0wXMm8YZ2603pmy52QVIQ'
 __TOKEN_MASTER_ = 'NDc0NDg0OTkxNDg1NjczNDcy.DkWVFQ.uqwFXRPnHbuzvjS7XtVlYXWhzrc'
 

@@ -4,6 +4,8 @@ import discord
 import random
 import math
 import requests
+import sys
+sys.path.append('../')
 import src
 from src.botcommands import BotCommands
 
@@ -146,7 +148,7 @@ def dice_parse(dice):
     _result = 0
     _text_info = ''
     for x in range(int(_d[0])):
-        _tmp = int(random.uniform(1, int(_d[1])))
+        _tmp = int(random.uniform(1, int(_d[1]) + 1))
         _text_info += _d[0] + 'd' + _d[1] + ' = ' + str(_tmp) + '\n'
         _result += _tmp
 
@@ -214,7 +216,7 @@ def just_roll(dice):
 
     _res = 0
     for x in range(int(_d[0])):
-        _res += int(random.uniform(1, int(_d[1])))
+        _res += int(random.uniform(1, int(_d[1]) + 1))
 
     return _res
 
@@ -388,7 +390,7 @@ async def on_message(message):
                     if command.count('\"') == 2 or command.count('\"') == 4:
                         module_name = parse_invite_text(a)
                         module_desc = parse_invite_text(a)
-                        channel_id = re.sub("<|>|#", " ", a[2])
+                        channel_id = re.sub("[<>#]", " ", a[2])
                         channel_id = channel_id.replace(" ", "")
                         channel = client.get_channel(channel_id)
                         channel_link = await client.create_invite(destination=channel, max_age=86400, unique=False)
@@ -396,7 +398,7 @@ async def on_message(message):
                         u = await client.get_user_info(player_id)
                         await client.send_message(u, embed=embed)
                     elif len(a) == 5:
-                        channel_id = re.sub("<|>|#", " ", a[4])
+                        channel_id = re.sub("[<>#]", " ", a[4])
                         channel_id = channel_id.replace(" ", "")
                         channel = client.get_channel(channel_id)
                         channel_link = await client.create_invite(destination=channel, max_age=86400, unique=False)
@@ -489,12 +491,12 @@ async def on_message(message):
             count = 0
             for i in users_info:
                 if i["DiscordID"] == current_user_discord_id:
-                    user_wrap[count-1]['Modules'].append(i['ModuleName'])
+                    user_wrap[count - 1]['Modules'].append(i['ModuleName'])
                 else:
                     current_user_discord_id = i["DiscordID"]
                     count += 1
                     user_wrap.append({'UserID': current_user_discord_id, 'Modules': []})
-                    user_wrap[count-1]['Modules'].append(i['ModuleName'])
+                    user_wrap[count - 1]['Modules'].append(i['ModuleName'])
             for u in user_wrap:
                 user = await client.get_user_info(u['UserID'])
                 msg += '```\nНик: ' + user.name + '\n'
@@ -560,5 +562,6 @@ async def on_ready():
     print('-----')
     game = discord.Game(name='Dungeon & Dragons')
     await client.change_presence(game=game)
+
 
 client.run(TOKEN)
